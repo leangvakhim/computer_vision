@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Visualizer: Step-by-Step</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .math-font {
+            font-family: 'Source Serif Pro', serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Matrix borders to look like math matrices */
+        .matrix-bracket {
+            position: relative;
+        }
+
+        .matrix-bracket::before,
+        .matrix-bracket::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            border: 2px solid #334155;
+        }
+
+        .matrix-bracket::before {
+            left: -4px;
+            border-right: none;
+        }
+
+        .matrix-bracket::after {
+            right: -4px;
+            border-left: none;
+        }
+
+        .cell-highlight {
+            background-color: #e0e7ff;
+            /* Indigo-100 */
+            border-color: #6366f1;
+            /* Indigo-500 */
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .transition-all-fast {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+
+    <div
+        class="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-[800px] border border-slate-100">
+
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-100 p-6 flex justify-between items-center z-10">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">Understanding CNNs</h1>
+                <p class="text-slate-500 text-sm mt-1">Convolutional Neural Networks for Computer Vision</p>
+            </div>
+            <div class="flex space-x-1" id="step-dots">
+                <!-- Dots injected by JS -->
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow p-8 flex flex-col relative overflow-hidden">
+            <div class="mb-6">
+                <h2 id="step-title" class="text-xl font-semibold text-indigo-600 mb-2 fade-in">Title</h2>
+                <p id="step-desc" class="text-slate-600 leading-relaxed fade-in h-16">Description goes here.</p>
+            </div>
+
+            <!-- Visualization Container -->
+            <div id="visual-container"
+                class="flex-grow bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 relative fade-in">
+                <!-- Dynamic visuals injected here -->
+            </div>
+        </main>
+
+        <!-- Footer / Controls -->
+        <footer class="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center">
+            <button id="btn-prev"
+                class="px-5 py-2.5 text-slate-600 font-medium rounded-lg hover:bg-slate-200 hover:text-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                &larr; Previous
+            </button>
+            <span id="step-counter" class="text-slate-500 font-medium text-sm">Step 1 of X</span>
+            <button id="btn-next"
+                class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                Next Step &rarr;
+            </button>
+        </footer>
+    </div>
+
+    <script src="../js/cnn.js"></script>
+</body>
+
+</html>

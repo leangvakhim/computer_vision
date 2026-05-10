@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Vision (CV) - Learning Path</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Smooth transitions for hover states */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900 flex flex-col items-center justify-center p-6">
+
+    <div class="max-w-2xl w-full">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-800 mb-4">
+                Computer Vision (CV)
+            </h1>
+            <p class="text-lg text-slate-600">
+                Explore the foundational and advanced concepts of visual intelligence.
+            </p>
+        </header>
+
+        <!-- Navigation Links -->
+        <nav>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <li>
+                    <a href="./html/cnn.html"
+                        class="group block p-6 bg-white border border-slate-200 rounded-xl card-hover hover:border-blue-500">
+                        <div class="flex items-center space-x-4">
+                            <div
+                                class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                </svg>
+                            </div>
+                            <span class="font-semibold text-slate-800">Convolutional Neural Networks (CNNs)</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./html/classic_architecture.html"
+                        class="group block p-6 bg-white border border-slate-200 rounded-xl card-hover hover:border-indigo-500">
+                        <div class="flex items-center space-x-4">
+                            <div
+                                class="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <span class="font-semibold text-slate-800">Classic Architectures</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./html/transfer_learning.html"
+                        class="group block p-6 bg-white border border-slate-200 rounded-xl card-hover hover:border-emerald-500">
+                        <div class="flex items-center space-x-4">
+                            <div
+                                class="p-3 bg-emerald-100 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            <span class="font-semibold text-slate-800">Transfer Learning & Fine-Tuning</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./html/advanced_task.html"
+                        class="group block p-6 bg-white border border-slate-200 rounded-xl card-hover hover:border-purple-500">
+                        <div class="flex items-center space-x-4">
+                            <div
+                                class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                            <span class="font-semibold text-slate-800">Advanced Vision Tasks</span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Footer Info -->
+        <!-- <footer class="mt-16 text-center text-slate-400 text-sm">
+            <p>&copy; 2025 Computer Vision Hub. All rights reserved.</p>
+        </footer> -->
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Architectures in Computer Vision</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for Math Equations -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            /* Very light slate for contrast against the white card */
+        }
+
+        .fade-transition {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Connecting lines for architectural diagrams */
+        .conn-line {
+            height: 2px;
+            width: 20px;
+            background-color: #cbd5e1;
+            margin: 0 4px;
+        }
+
+        /* Skip connection arrow for ResNet */
+        .skip-connection {
+            position: absolute;
+            border: 2px solid #818cf8;
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            width: 40px;
+            height: calc(100% + 16px);
+            left: -40px;
+            top: -8px;
+            z-index: 0;
+        }
+
+        .skip-arrowhead {
+            position: absolute;
+            bottom: -6px;
+            right: -2px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #818cf8;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div
+        class="bg-white w-full max-w-4xl rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[600px] border border-slate-100">
+
+        <!-- Header -->
+        <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">Computer Vision Journey</h1>
+                <p class="text-sm text-slate-500 mt-1">Exploring Classic Deep Learning Architectures</p>
+            </div>
+            <!-- Progress Tracker -->
+            <div class="flex space-x-2" id="progress-dots">
+                <!-- Dots injected via JS -->
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-grow p-8 flex flex-col relative bg-white" id="content-area">
+
+            <div id="step-container" class="fade-transition fade-in flex-grow flex flex-col h-full">
+                <!-- Title & Description -->
+                <div class="mb-8">
+                    <h2 id="step-title" class="text-3xl font-bold text-indigo-600 mb-3">Title</h2>
+                    <p id="step-desc" class="text-slate-600 text-lg leading-relaxed">Description goes here.</p>
+                </div>
+
+                <!-- Visualization Area -->
+                <div id="step-visual"
+                    class="flex-grow flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 p-6 relative overflow-hidden">
+                    <!-- Visuals injected via JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer / Controls -->
+        <div class="px-8 py-5 border-t border-slate-100 bg-white flex justify-between items-center">
+            <button id="btn-back"
+                class="px-6 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                ← Back Step
+            </button>
+
+            <span id="step-counter" class="text-sm font-semibold text-slate-400">Step 1 of X</span>
+
+            <button id="btn-next"
+                class="px-6 py-2.5 rounded-xl font-medium bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                Next Step →
+            </button>
+        </div>
+
+    </div>
+
+    <script src="../js/classic_architecture.js"></script>
+</body>
+
+</html>
