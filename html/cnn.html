@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CNN Visualizer: Step-by-Step</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- KaTeX CSS and JS for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -97,9 +102,9 @@
                 <p id="step-desc" class="text-slate-600 leading-relaxed fade-in h-16">Description goes here.</p>
             </div>
 
-            <!-- Visualization Container -->
+            <!-- Visualization Container - Added min-h-0 and overflow-hidden to bound children -->
             <div id="visual-container"
-                class="flex-grow bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 relative fade-in">
+                class="flex-grow bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-6 relative fade-in overflow-hidden min-h-0">
                 <!-- Dynamic visuals injected here -->
             </div>
         </main>

@@ -1,3 +1,4 @@
+// <!-- Application Script -->
 // Data and State
 let currentStep = 0;
 let animationInterval = null;
@@ -119,12 +120,16 @@ const steps = [
                 // Reset all styles
                 for (let i = 0; i < 16; i++) {
                     const el = document.getElementById(`img-cell-${i}`);
-                    el.classList.remove('cell-highlight');
-                    el.style.borderWidth = '1px';
+                    if (el) {
+                        el.classList.remove('cell-highlight');
+                        el.style.borderWidth = '1px';
+                    }
                 }
                 for (let i = 0; i < 9; i++) {
                     const el = document.getElementById(`out-cell-${i}`);
-                    el.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-800', 'font-bold', 'scale-105');
+                    if (el) {
+                        el.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-800', 'font-bold', 'scale-105');
+                    }
                 }
 
                 if (step >= positions.length) step = 0; // loop back
@@ -136,7 +141,7 @@ const steps = [
                 // Highlight current region & calculate
                 pos.forEach((imgIdx, kIdx) => {
                     const el = document.getElementById(`img-cell-${imgIdx}`);
-                    el.classList.add('cell-highlight');
+                    if (el) el.classList.add('cell-highlight');
 
                     const val = imgData[imgIdx];
                     const kVal = kernelData[kIdx];
@@ -147,13 +152,16 @@ const steps = [
                     if (kIdx < 3) calcStr += " + ";
                 });
 
-                document.getElementById('calc-text').innerText = `${calcStr} = ${sum}`;
+                const calcTextEl = document.getElementById('calc-text');
+                if (calcTextEl) calcTextEl.innerText = `${calcStr} = ${sum}`;
 
                 // Update output cell
                 const outEl = document.getElementById(`out-cell-${step}`);
-                outEl.innerText = sum;
-                outEl.classList.remove('bg-slate-50', 'text-slate-400');
-                outEl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800', 'font-bold', 'scale-105');
+                if (outEl) {
+                    outEl.innerText = sum;
+                    outEl.classList.remove('bg-slate-50', 'text-slate-400');
+                    outEl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800', 'font-bold', 'scale-105');
+                }
 
                 step++;
             };
@@ -166,6 +174,13 @@ const steps = [
         title: "4. The Convolution Equation",
         desc: "Here is the formal mathematical formula for the 2D convolution operation you just saw. It calculates the value for every pixel in the new Feature Map.",
         render: (container) => {
+            // KaTeX Integration: Render LaTeX equations into HTML strings
+            const latexEq = "S(i, j) = (I * K)(i, j) = \\sum_{m} \\sum_{n} I(i+m, j+n) \\cdot K(m, n)";
+            const eqHtml = katex.renderToString(latexEq, { displayMode: true, throwOnError: false });
+            const sIKHtml = katex.renderToString("S, (I * K)", { throwOnError: false });
+            const iHtml = katex.renderToString("I", { throwOnError: false });
+            const kHtml = katex.renderToString("K", { throwOnError: false });
+
             container.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full w-full px-10">
                     <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 w-full text-center relative overflow-hidden">
@@ -174,35 +189,22 @@ const steps = [
 
                         <h3 class="text-slate-500 font-medium mb-6 uppercase tracking-wider text-sm">2D Discrete Convolution</h3>
 
-                        <div class="math-font text-2xl md:text-3xl text-slate-800 flex flex-wrap items-center justify-center gap-2 mb-8">
-                            <span>S(i, j)</span>
-                            <span>=</span>
-                            <span>(I * K)(i, j)</span>
-                            <span>=</span>
-                            <div class="flex flex-col items-center justify-center mx-1">
-                                <span class="text-xs leading-none mb-1">m</span>
-                                <span class="text-4xl leading-none">&sum;</span>
-                                <span class="text-xs leading-none mt-1 invisible">m</span>
-                            </div>
-                            <div class="flex flex-col items-center justify-center mx-1">
-                                <span class="text-xs leading-none mb-1">n</span>
-                                <span class="text-4xl leading-none">&sum;</span>
-                                <span class="text-xs leading-none mt-1 invisible">n</span>
-                            </div>
-                            <span>I(i+m, j+n) &middot; K(m, n)</span>
+                        <!-- Rendered Equation -->
+                        <div class="text-slate-800 mb-8 w-full flex justify-center text-lg md:text-xl">
+                            ${eqHtml}
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left mt-8 border-t border-slate-100 pt-6">
                             <div class="bg-slate-50 p-3 rounded">
-                                <span class="math-font font-bold text-lg">S, (I * K)</span>
+                                <span class="font-bold text-lg text-slate-800">${sIKHtml}</span>
                                 <p class="text-sm text-slate-600 mt-1">The output Feature Map</p>
                             </div>
                             <div class="bg-slate-50 p-3 rounded">
-                                <span class="math-font font-bold text-lg">I</span>
+                                <span class="font-bold text-lg text-slate-800">${iHtml}</span>
                                 <p class="text-sm text-slate-600 mt-1">The Input Image matrix</p>
                             </div>
                             <div class="bg-slate-50 p-3 rounded">
-                                <span class="math-font font-bold text-lg">K</span>
+                                <span class="font-bold text-lg text-slate-800">${kHtml}</span>
                                 <p class="text-sm text-slate-600 mt-1">The Kernel (Filter) matrix</p>
                             </div>
                         </div>
@@ -376,6 +378,63 @@ const steps = [
                                 <span class="text-xs font-bold text-pink-600">15%</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            `;
+        }
+    },
+    {
+        title: "8. Implementing with PyTorch",
+        desc: "Let's see how all these steps come together in Python using PyTorch, the standard library for deep learning. Notice how the visual steps we just went through map directly to a few simple lines of code!",
+        render: (container) => {
+            container.innerHTML = `
+                <!-- Ensure full width/height wrapper, avoiding overflow bugs -->
+                <div class="flex items-center justify-center w-full h-full min-h-0">
+                    <!-- Code Container: Set to full height so inner elements can be flex-sized -->
+                    <div class="bg-[#1e1e1e] text-slate-300 p-5 rounded-xl w-full max-w-2xl h-full flex flex-col text-sm shadow-xl border border-slate-700 font-mono leading-relaxed">
+
+                        <!-- IDE Header: shrink-0 keeps it visible without squishing -->
+                        <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-3 shrink-0">
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <span class="ml-4 text-xs text-slate-400 font-sans tracking-wide">simple_cnn.py</span>
+                        </div>
+
+                        <!-- Code Snippet: flex-1 ensures it fills space, overflow-y-auto allows vertical scroll -->
+<pre class="whitespace-pre overflow-y-auto overflow-x-auto flex-1 min-h-0 pr-2">
+<span class="text-pink-400">import</span> <span class="text-sky-300">torch</span>
+<span class="text-pink-400">import</span> <span class="text-sky-300">torch.nn</span> <span class="text-pink-400">as</span> <span class="text-sky-300">nn</span>
+
+<span class="text-pink-400">class</span> <span class="text-emerald-300">SimpleCNN</span>(<span class="text-sky-300">nn</span>.<span class="text-emerald-300">Module</span>):
+    <span class="text-pink-400">def</span> <span class="text-blue-300">__init__</span>(<span class="text-sky-300">self</span>):
+        <span class="text-blue-300">super</span>().<span class="text-blue-300">__init__</span>()
+
+        <span class="text-slate-500 italic"># Steps 2 & 3: The Convolution Operation (The Kernel)</span>
+        <span class="text-sky-300">self</span>.conv = <span class="text-sky-300">nn</span>.<span class="text-blue-300">Conv2d</span>(in_channels=<span class="text-orange-300">1</span>, out_channels=<span class="text-orange-300">1</span>, kernel_size=<span class="text-orange-300">2</span>)
+
+        <span class="text-slate-500 italic"># Step 5: Activation (ReLU)</span>
+        <span class="text-sky-300">self</span>.relu = <span class="text-sky-300">nn</span>.<span class="text-blue-300">ReLU</span>()
+
+        <span class="text-slate-500 italic"># Step 6: Max Pooling</span>
+        <span class="text-sky-300">self</span>.pool = <span class="text-sky-300">nn</span>.<span class="text-blue-300">MaxPool2d</span>(kernel_size=<span class="text-orange-300">2</span>, stride=<span class="text-orange-300">2</span>)
+
+        <span class="text-slate-500 italic"># Step 7: Classification (Dense Layer - 2 outputs for Cat/Dog)</span>
+        <span class="text-sky-300">self</span>.fc = <span class="text-sky-300">nn</span>.<span class="text-blue-300">Linear</span>(in_features=<span class="text-orange-300">1</span>, out_features=<span class="text-orange-300">2</span>)
+
+    <span class="text-pink-400">def</span> <span class="text-blue-300">forward</span>(<span class="text-sky-300">self</span>, <span class="text-sky-300">x</span>):
+        <span class="text-slate-500 italic"># Pass the image through Conv -> ReLU -> Pool</span>
+        x = <span class="text-sky-300">self</span>.pool(<span class="text-sky-300">self</span>.relu(<span class="text-sky-300">self</span>.conv(x)))
+
+        <span class="text-slate-500 italic"># Step 7: Flattening the 2D grid to a 1D array</span>
+        x = <span class="text-sky-300">torch</span>.<span class="text-blue-300">flatten</span>(x, <span class="text-orange-300">1</span>)
+
+        <span class="text-slate-500 italic"># Final prediction calculation</span>
+        x = <span class="text-sky-300">self</span>.fc(x)
+        <span class="text-pink-400">return</span> x
+        </pre>
                     </div>
                 </div>
             `;
