@@ -1,3 +1,4 @@
+// <!-- Consolidated JavaScript -->
 // Data for each step
 const steps = [
     {
@@ -158,6 +159,49 @@ const steps = [
             </div>
         `,
         renderMath: true
+    },
+    {
+        title: "7. Building with PyTorch",
+        desc: "Let's translate these concepts into real code! Here is a simple CNN written using the <strong>PyTorch</strong> library. We define a class that inherits from PyTorch's module, map out our layers in the <code>__init__</code> function, and define how data flows through them in the <code>forward</code> function.",
+        visual: `
+            <div class="w-full max-w-2xl bg-[#1e1e1e] rounded-xl shadow-lg overflow-hidden border border-slate-700 text-left relative group">
+                <!-- Mac-like Window Header -->
+                <div class="flex items-center px-4 py-3 bg-[#2d2d2d] border-b border-slate-700 space-x-2">
+                    <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <span class="ml-3 text-xs text-slate-400 font-mono tracking-wider">simple_cnn.py</span>
+                </div>
+
+                <!-- Code Body (Mock Syntax Highlighting) -->
+                <div class="p-6 text-xs sm:text-sm font-mono text-slate-300 overflow-x-auto leading-relaxed">
+                    <div class="mb-3"><span class="text-pink-400">import</span> torch.nn <span class="text-pink-400">as</span> nn</div>
+
+                    <div class="text-blue-400 mb-1">class <span class="text-yellow-300">SimpleCNN</span><span class="text-slate-300">(nn.Module):</span></div>
+                    <div class="pl-4 sm:pl-8">
+                        <div class="text-blue-400">def <span class="text-yellow-300">__init__</span><span class="text-slate-300">(self):</span></div>
+                        <div class="pl-4 sm:pl-8 text-slate-300">super().__init__()</div>
+
+                        <div class="pl-4 sm:pl-8 mt-3 text-slate-500 italic"># 1. Convolution (Extract features like LeNet)</div>
+                        <div class="pl-4 sm:pl-8 text-slate-300">self.conv = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)</div>
+
+                        <div class="pl-4 sm:pl-8 mt-3 text-slate-500 italic"># 2. Activation (Solve vanishing gradients like AlexNet)</div>
+                        <div class="pl-4 sm:pl-8 text-slate-300">self.relu = nn.ReLU()</div>
+
+                        <div class="pl-4 sm:pl-8 mt-3 text-slate-500 italic"># 3. Fully Connected (Make the final classification)</div>
+                        <div class="pl-4 sm:pl-8 text-slate-300 mb-3">self.fc = nn.Linear(in_features=16*30*30, out_features=10)</div>
+                    </div>
+
+                    <div class="pl-4 sm:pl-8 text-blue-400">def <span class="text-yellow-300">forward</span><span class="text-slate-300">(self, x):</span></div>
+                    <div class="pl-8 sm:pl-16 text-slate-500 italic"># Define the forward pass: how data flows</div>
+                    <div class="pl-8 sm:pl-16 text-slate-300">x = self.conv(x)</div>
+                    <div class="pl-8 sm:pl-16 text-slate-300">x = self.relu(x)</div>
+                    <div class="pl-8 sm:pl-16 text-slate-300">x = x.view(x.size(0), -1) <span class="text-slate-500 italic"># Flatten for FC layer</span></div>
+                    <div class="pl-8 sm:pl-16 text-purple-400">return <span class="text-slate-300">self.fc(x)</span></div>
+                </div>
+            </div>
+        `,
+        renderMath: false
     }
 ];
 
