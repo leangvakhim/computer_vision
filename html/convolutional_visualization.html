@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Convolution Visualization</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- KaTeX CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .grid-cell {
+            transition: all 0.3s ease;
+        }
+
+        .highlight-input {
+            background-color: #fef08a;
+            border-color: #eab308;
+            color: #854d0e;
+            font-weight: bold;
+        }
+
+        .highlight-kernel {
+            background-color: #bfdbfe;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+            font-weight: bold;
+        }
+
+        .highlight-feature {
+            background-color: #bbf7d0;
+            border-color: #22c55e;
+            color: #14532d;
+            font-weight: bold;
+        }
+
+        .inactive-feature {
+            color: transparent;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 antialiased p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-8">
+
+        <!-- Header & Intro -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Understanding Convolution</h1>
+            <p class="text-lg text-gray-600 mb-4">
+                The word <strong>Convolution</strong> sounds really big and complicated, but it is actually just a fancy
+                way of playing a matching game. Let’s break it down so it makes perfect sense using <strong>The
+                    Detective Analogy</strong>.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div class="bg-yellow-50 p-5 rounded-xl border border-yellow-200">
+                    <h3 class="font-bold text-yellow-800 text-lg mb-2">1. The Input (Sandbox)</h3>
+                    <p class="text-sm text-yellow-900 mb-3">The big grid of numbers representing shapes. <strong>It
+                            comes from your picture.</strong></p>
+                    <p class="text-sm text-yellow-800 leading-relaxed">The input size depends entirely on what you are
+                        looking at. If you are looking at a tiny icon, your sandbox might be small (like 10x10). If you
+                        are looking at a giant, high-quality photograph of a cat, your sandbox will be massive (like
+                        1000x1000)!</p>
+                </div>
+                <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+                    <h3 class="font-bold text-blue-800 text-lg mb-2">2. The Kernel (Magnifying Glass)</h3>
+                    <p class="text-sm text-blue-900 mb-3">The pattern you are searching for. <strong>It is chosen by
+                            you.</strong></p>
+                    <p class="text-sm text-blue-800 leading-relaxed">The programmer (you!) gets to choose how big the
+                        magnifying glass is. A small glass (like 2x2 or 3x3) is great for finding tiny details, like the
+                        tip of a cat's whisker. A bigger glass (like 5x5) is better for finding larger shapes, like the
+                        whole cat ear.</p>
+                </div>
+                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                    <h3 class="font-bold text-green-800 text-lg mb-2">3. The Feature Map (Notepad)</h3>
+                    <p class="text-sm text-green-900 mb-3">Where you write the "Match Score". <strong>Its size is
+                            calculated!</strong></p>
+                    <p class="text-sm text-green-800 leading-relaxed mb-3">It is never random. Because your magnifying
+                        glass takes up space, it can't slide as far in a small sandbox. There is a simple math rule to
+                        figure out the size of the Feature Map:</p>
+                    <span
+                        class="font-mono bg-green-100 p-2 rounded-lg text-green-900 font-bold text-xs md:text-sm block text-center border border-green-300">Input
+                        Size - Kernel Size + 1 = Feature Map Size</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Visualizer -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Interactive Step-by-Step Simulation</h2>
+                <div class="text-sm font-semibold bg-gray-100 px-4 py-2 rounded-full">
+                    Step: <span id="step-counter" class="text-indigo-600">1</span> / 9
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 mb-8">
+
+                <!-- Input Matrix (Sandbox) -->
+                <div class="flex flex-col items-center">
+                    <h3 class="font-bold text-yellow-600 mb-3">Input (4x4)</h3>
+                    <div id="input-grid" class="grid grid-cols-4 gap-1 p-2 bg-gray-100 rounded-lg">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Kernel Matrix (Magnifying Glass) -->
+                <div class="flex flex-col items-center relative">
+                    <div
+                        class="text-xl font-bold text-gray-400 absolute top-1/2 -left-6 lg:-left-8 transform -translate-y-1/2">
+                        ×</div>
+                    <h3 class="font-bold text-blue-600 mb-3">Kernel (2x2)</h3>
+                    <div id="kernel-grid" class="grid grid-cols-2 gap-1 p-2 bg-gray-100 rounded-lg">
+                        <!-- Filled by JS -->
+                    </div>
+                    <div
+                        class="text-xl font-bold text-gray-400 absolute top-1/2 -right-6 lg:-right-8 transform -translate-y-1/2">
+                        =</div>
+                </div>
+
+                <!-- Feature Map (Notepad) -->
+                <div class="flex flex-col items-center">
+                    <h3 class="font-bold text-green-600 mb-3">Feature Map (3x3)</h3>
+                    <div id="feature-grid" class="grid grid-cols-3 gap-1 p-2 bg-gray-100 rounded-lg">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Math & Explanation Panel -->
+            <div
+                class="bg-slate-50 border border-slate-200 p-6 rounded-xl min-h-[160px] flex flex-col justify-center items-center">
+                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Mathematical Calculation</h4>
+                <div id="math-formula" class="text-lg md:text-xl w-full overflow-x-auto text-center py-2">
+                    <!-- Filled by KaTeX -->
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-center gap-4 mt-8">
+                <button id="btn-back" onclick="changeStep(-1)"
+                    class="px-6 py-3 bg-white border-2 border-indigo-600 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 focus:ring-4 focus:ring-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    ← Back
+                </button>
+                <button id="btn-next" onclick="changeStep(1)"
+                    class="px-6 py-3 bg-indigo-600 border-2 border-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-200">
+                    Next Step →
+                </button>
+            </div>
+        </div>
+
+        <!-- Deep Dive Explanations -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-8">
+
+            <section>
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">Why do computers do this?</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    If a computer is trying to recognize a picture of a cat, it uses thousands of these little
+                    magnifying glasses. Some look for pointy ears, some look for whiskers, and some look for tails. By
+                    sliding all these magnifying glasses over the picture, the computer builds a <strong>"treasure
+                        map"</strong> of where all the cat parts are, helping it guess that the picture is indeed a cat!
+                </p>
+            </section>
+
+            <hr class="border-gray-200">
+
+            <section>
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">Are they always those sizes?</h2>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    That is a brilliant question! You are thinking exactly like a computer scientist. The short answer
+                    is <strong>no</strong>, they are not always those sizes! They change all the time, and they are
+                    never random. There is a strict rule (a calculation) that decides the size of the Feature Map.
+                </p>
+
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 my-6">
+                    <h3 class="text-xl font-bold text-indigo-900 mb-4 text-center">The Magic Rule</h3>
+                    <div id="formula-rule" class="text-center text-xl mb-4"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="bg-yellow-100 text-yellow-800 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                            1</div>
+                        <div>
+                            <p class="font-bold text-gray-900">The Input (The Sandbox) comes from your picture.</p>
+                            <p class="text-gray-600 text-sm mt-1">If you are looking at a tiny icon, your sandbox might
+                                be small (10x10). For a giant, high-quality photograph, it will be massive (1000x1000)!
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="bg-blue-100 text-blue-800 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                            2</div>
+                        <div>
+                            <p class="font-bold text-gray-900">The Kernel (The Magnifying Glass) is chosen by you.</p>
+                            <p class="text-gray-600 text-sm mt-1">A small glass (3x3) finds tiny details like a whisker
+                                tip. A bigger glass (5x5) finds larger shapes like a whole ear.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="bg-green-100 text-green-800 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                            3</div>
+                        <div>
+                            <p class="font-bold text-gray-900">The Feature Map (The Notepad) is calculated!</p>
+                            <p class="text-gray-600 text-sm mt-1">Because your magnifying glass takes up space, it can't
+                                slide as far in a small sandbox. The size is purely based on math.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mt-6">
+                    <h4 class="font-bold text-gray-800 mb-2">Answering your specific example:</h4>
+                    <p class="text-gray-600 mb-3 italic">"What if the Input is 4, and the Kernel is 3? Will the feature
+                        map be 3?"</p>
+                    <div id="example-math" class="text-center"></div>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Data Definitions ---
+
+        // 4x4 Input Matrix (designed to match the user's specific text example for the top-right spot)
+        // At step 3 (top-right, x=2, y=0), the 2x2 patch needs to be:
+        // Top-left: 1, Top-right: 0, Bottom-left: 1, Bottom-right: 0
+        const inputMatrix = [
+            [0, 1, 1, 0],
+            [1, 0, 1, 0],
+            [0, 1, 0, 1],
+            [1, 0, 1, 0]
+        ];
+
+        // 2x2 Kernel Matrix
+        const kernelMatrix = [
+            [1, 0],
+            [0, 1]
+        ];
+
+        // Precalculate Feature Map (3x3)
+        const featureMap = [];
+        for (let y = 0; y < 3; y++) {
+            let row = [];
+            for (let x = 0; x < 3; x++) {
+                let sum = 0;
+                for (let ky = 0; ky < 2; ky++) {
+                    for (let kx = 0; kx < 2; kx++) {
+                        sum += inputMatrix[y + ky][x + kx] * kernelMatrix[ky][kx];
+                    }
+                }
+                row.push(sum);
+            }
+            featureMap.push(row);
+        }
+
+        // --- State ---
+        let currentStep = 0; // 0 to 8 (9 total steps for 3x3 feature map)
+        const totalSteps = 9;
+
+        // --- DOM Elements ---
+        const inputGrid = document.getElementById('input-grid');
+        const kernelGrid = document.getElementById('kernel-grid');
+        const featureGrid = document.getElementById('feature-grid');
+        const stepCounter = document.getElementById('step-counter');
+        const btnBack = document.getElementById('btn-back');
+        const btnNext = document.getElementById('btn-next');
+        const mathDiv = document.getElementById('math-formula');
+
+        // --- Core Functions ---
+
+        function init() {
+            // Setup static Kernel grid
+            kernelGrid.innerHTML = '';
+            for (let y = 0; y < 2; y++) {
+                for (let x = 0; x < 2; x++) {
+                    const div = document.createElement('div');
+                    div.className = 'w-10 h-10 md:w-14 md:h-14 flex items-center justify-center border-2 rounded text-lg md:text-xl grid-cell highlight-kernel';
+                    div.innerText = kernelMatrix[y][x];
+                    kernelGrid.appendChild(div);
+                }
+            }
+
+            // Render general formulas using KaTeX
+            katex.render("\\text{Input Size} - \\text{Kernel Size} + 1 = \\text{Feature Map Size}", document.getElementById('formula-rule'), { displayMode: true });
+            katex.render("\\begin{aligned} &\\text{Input} = 4 \\\\ &\\text{Kernel} = 3 \\\\ &\\text{Math: } 4 - 3 + 1 = 2 \\\\ &\\textbf{Result: } \\text{Feature Map is } 2 \\times 2 \\end{aligned}", document.getElementById('example-math'), { displayMode: true });
+
+            updateVisualization();
+        }
+
+        function changeStep(delta) {
+            currentStep += delta;
+            if (currentStep < 0) currentStep = 0;
+            if (currentStep >= totalSteps) currentStep = totalSteps - 1;
+            updateVisualization();
+        }
+
+        function updateVisualization() {
+            // Update Buttons & Counter
+            btnBack.disabled = currentStep === 0;
+            btnNext.disabled = currentStep === totalSteps - 1;
+            stepCounter.innerText = currentStep + 1;
+
+            const currentX = currentStep % 3;
+            const currentY = Math.floor(currentStep / 3);
+
+            // 1. Render Input Grid (Sandbox)
+            inputGrid.innerHTML = '';
+            for (let y = 0; y < 4; y++) {
+                for (let x = 0; x < 4; x++) {
+                    const div = document.createElement('div');
+                    // Check if cell is within the current 2x2 "Magnifying Glass" view
+                    const isHighlighted = (x >= currentX && x < currentX + 2) && (y >= currentY && y < currentY + 2);
+
+                    div.className = `w-10 h-10 md:w-14 md:h-14 flex items-center justify-center border-2 rounded text-lg md:text-xl grid-cell ${isHighlighted ? 'highlight-input z-10 scale-110 shadow-md' : 'bg-white border-gray-200 text-gray-500'}`;
+                    div.innerText = inputMatrix[y][x];
+                    inputGrid.appendChild(div);
+                }
+            }
+
+            // 2. Render Feature Map (Notepad)
+            featureGrid.innerHTML = '';
+            let stepIndex = 0;
+            for (let y = 0; y < 3; y++) {
+                for (let x = 0; x < 3; x++) {
+                    const div = document.createElement('div');
+
+                    if (stepIndex < currentStep) {
+                        // Already calculated
+                        div.className = 'w-10 h-10 md:w-14 md:h-14 flex items-center justify-center border-2 rounded text-lg md:text-xl grid-cell bg-white border-green-300 text-green-700';
+                        div.innerText = featureMap[y][x];
+                    } else if (stepIndex === currentStep) {
+                        // Currently calculating
+                        div.className = 'w-10 h-10 md:w-14 md:h-14 flex items-center justify-center border-2 rounded text-lg md:text-xl grid-cell highlight-feature scale-110 shadow-md z-10';
+                        div.innerText = featureMap[y][x];
+                    } else {
+                        // Future calculation (hidden)
+                        div.className = 'w-10 h-10 md:w-14 md:h-14 flex items-center justify-center border-2 rounded text-lg md:text-xl grid-cell inactive-feature border-dashed border-gray-300';
+                        div.innerText = '?';
+                    }
+
+                    featureGrid.appendChild(div);
+                    stepIndex++;
+                }
+            }
+
+            // 3. Generate Math Formula using KaTeX
+            // Extract the 4 values from input and kernel
+            const i11 = inputMatrix[currentY][currentX];
+            const i12 = inputMatrix[currentY][currentX + 1];
+            const i21 = inputMatrix[currentY + 1][currentX];
+            const i22 = inputMatrix[currentY + 1][currentX + 1];
+
+            const k11 = kernelMatrix[0][0];
+            const k12 = kernelMatrix[0][1];
+            const k21 = kernelMatrix[1][0];
+            const k22 = kernelMatrix[1][1];
+
+            const score = featureMap[currentY][currentX];
+
+            // Build standard display formula
+            const latexString = `
+                \\begin{aligned}
+                \\text{Score} &= (${i11} \\times ${k11}) + (${i12} \\times ${k12}) + (${i21} \\times ${k21}) + (${i22} \\times ${k22}) \\\\
+                &= (${i11 * k11}) + (${i12 * k12}) + (${i21 * k21}) + (${i22 * k22}) \\\\
+                &= \\mathbf{${score}}
+                \\end{aligned}
+            `;
+
+            try {
+                katex.render(latexString, mathDiv, { displayMode: true });
+            } catch (e) {
+                console.error("KaTeX Error:", e);
+                mathDiv.innerText = "Error rendering math.";
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+
+</html>
