@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Pose Estimation Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- Add Prism for Python Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        .step-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .step-content.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .grid-cell {
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .magnifying-glass {
+            box-shadow: 0 0 0 9999px rgba(255, 255, 255, 0.75);
+            border: 2px solid #0284c7;
+            transition: all 0.2s linear;
+        }
+
+        .hot-spot {
+            background: radial-gradient(circle, rgba(239, 68, 68, 1) 0%, rgba(234, 179, 8, 0.8) 40%, rgba(59, 130, 246, 0) 70%);
+        }
+
+        /* Custom scrollbar for joint list - Light Mode */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-cyan-200 selection:text-slate-900">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <h1
+                class="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-cyan-600">
+                    <path d="m18 16 4-4-4-4" />
+                    <path d="m6 8-4 4 4 4" />
+                    <path d="m14.5 4-5 16" />
+                </svg>
+                Pose Estimation Explorer
+            </h1>
+            <div class="text-sm font-medium text-slate-500 flex items-center gap-2">
+                Step <span id="step-indicator-current" class="text-cyan-600 text-lg">1</span> of 7
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="max-w-5xl mx-auto mt-4 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            <div id="progress-bar"
+                class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full w-1/6 transition-all duration-300"></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-6 flex flex-col">
+
+        <!-- STEP 1: Introduction -->
+        <div id="step-1"
+            class="step-content active flex-col gap-6 md:flex-row items-center justify-center min-h-[60vh]">
+            <div class="flex-1 space-y-4">
+                <h2 class="text-3xl font-bold text-slate-900">The 7-Year-Old Explanation</h2>
+                <h3 class="text-xl text-cyan-600 font-semibold">Playing "Hot and Cold"</h3>
+                <p class="text-lg text-slate-600 leading-relaxed">
+                    Imagine you are playing <strong>"Pin the Tail on the Donkey"</strong> while blindfolded. Your
+                    friends are trying to help you find the exact spot to place the tail by yelling <span
+                        class="text-red-500 font-bold">"Hot!"</span> when you get close and <span
+                        class="text-blue-500 font-bold">"Cold!"</span> when you move away.
+                </p>
+                <p class="text-lg text-slate-600 leading-relaxed">
+                    In Computer Vision, a <strong>Convolutional Neural Network (CNN)</strong> plays this exact same
+                    game, but instead of a donkey, it's looking for human joints—like your right elbow or left knee.
+                    These specific spots are called <strong>keypoints</strong>.
+                </p>
+            </div>
+            <div class="flex-1 flex justify-center items-center">
+                <div
+                    class="relative w-64 h-64 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-xl">
+                    <!-- Animation of hot/cold pulses -->
+                    <div
+                        class="absolute inset-0 flex items-center justify-center animate-[pulse_3s_ease-in-out_infinite]">
+                        <div class="w-32 h-32 rounded-full bg-blue-400/30 blur-xl"></div>
+                    </div>
+                    <div
+                        class="absolute inset-0 flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite_0.5s]">
+                        <div class="w-16 h-16 rounded-full bg-red-400/50 blur-lg"></div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-slate-400 relative z-10">
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 8 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: How AI Plays -->
+        <div id="step-2" class="step-content flex-col gap-6 md:flex-row items-center justify-center min-h-[60vh]">
+            <div class="flex-1 space-y-6">
+                <h2 class="text-3xl font-bold text-slate-900">How the AI Plays the Game</h2>
+
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-cyan-700 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                <line x1="3" x2="21" y1="9" y2="9" />
+                                <line x1="3" x2="21" y1="15" y2="15" />
+                                <line x1="9" x2="9" y1="3" y2="21" />
+                                <line x1="15" x2="15" y1="3" y2="21" />
+                            </svg>
+                            The Grid (The Map)
+                        </h4>
+                        <p class="text-sm text-slate-600 mt-1">The AI breaks the picture down into a giant piece of
+                            graph paper.</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-cyan-700 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
+                            The Magnifying Glass (CNN)
+                        </h4>
+                        <p class="text-sm text-slate-600 mt-1">It slides a tiny magnifying glass over every single
+                            square, looking for patterns (like the bend of an elbow).</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-cyan-700 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <circle cx="12" cy="11" r="3" />
+                            </svg>
+                            The Guess (Point Estimation)
+                        </h4>
+                        <p class="text-sm text-slate-600 mt-1">The AI points to a specific square and says, <em>"I am
+                                99% sure the right elbow is exactly on this dot."</em></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex justify-center items-center w-full">
+                <!-- Grid Animation visualization -->
+                <div
+                    class="relative w-64 h-64 md:w-80 md:h-80 bg-white rounded-lg overflow-hidden border border-slate-200 shadow-md">
+                    <!-- The image (abstract person silhouette) -->
+                    <svg class="absolute inset-0 w-full h-full text-slate-200 opacity-80" viewBox="0 0 100 100"
+                        fill="currentColor">
+                        <circle cx="50" cy="20" r="10" />
+                        <rect x="40" y="30" width="20" height="40" rx="10" />
+                        <path d="M30 40 Q 20 60 10 70" stroke="currentColor" stroke-width="8" stroke-linecap="round"
+                            fill="none" />
+                        <path d="M70 40 Q 80 60 90 70" stroke="currentColor" stroke-width="8" stroke-linecap="round"
+                            fill="none" />
+                    </svg>
+
+                    <!-- The Grid Lines -->
+                    <div class="absolute inset-0 grid grid-cols-10 grid-rows-10">
+                        <!-- Auto-generated via JS -->
+                    </div>
+
+                    <!-- The sliding magnifying glass (CNN Filter) -->
+                    <div id="cnn-filter"
+                        class="absolute w-[30%] h-[30%] magnifying-glass rounded-md z-10 flex items-center justify-center">
+                        <div class="w-full h-full border border-cyan-400 bg-cyan-400/10"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: The Math / Heatmap -->
+        <div id="step-3" class="step-content flex-col gap-8 items-center justify-center min-h-[60vh]">
+            <div class="text-center max-w-3xl space-y-4">
+                <h2 class="text-3xl font-bold text-slate-900">The Math Behind It: A Treasure Map</h2>
+                <p class="text-lg text-slate-600">
+                    Every point on the map has an address made of two numbers: how far across, and how far up. We call
+                    these coordinates <strong>(x,y)</strong>.
+                </p>
+                <p class="text-md text-slate-500">
+                    To find the perfect (x,y) numbers, the AI creates a <strong>Heatmap</strong>. It colors the picture
+                    with invisible "heat"—painting the areas where it thinks the elbow might be with warm colors
+                    (red/yellow), and everywhere else with cold colors (blue/white). The math simply picks the absolute
+                    "hottest" point!
+                </p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center items-center mt-6">
+                <!-- Coordinates explanation -->
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm w-full md:w-1/2 flex flex-col items-center">
+                    <div class="relative w-full aspect-square border-l-2 border-b-2 border-cyan-500 mt-4 ml-4">
+                        <span
+                            class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-cyan-700 font-mono text-sm font-semibold">X
+                            Axis (Across)</span>
+                        <span
+                            class="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 text-cyan-700 font-mono text-sm font-semibold whitespace-nowrap">Y
+                            Axis (Up)</span>
+                        <span class="absolute -left-6 -bottom-6 text-slate-400 font-mono text-sm">(0,0)</span>
+
+                        <!-- A point -->
+                        <div
+                            class="absolute left-[70%] bottom-[60%] w-3 h-3 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] -translate-x-1/2 translate-y-1/2 z-10">
+                        </div>
+
+                        <!-- Dotted lines -->
+                        <div
+                            class="absolute left-[70%] bottom-0 h-[60%] w-[1px] border-l border-dashed border-red-500/50">
+                        </div>
+                        <div
+                            class="absolute left-0 bottom-[60%] w-[70%] h-[1px] border-b border-dashed border-red-500/50">
+                        </div>
+
+                        <div
+                            class="absolute left-[72%] bottom-[62%] text-slate-900 font-bold bg-slate-50 border border-slate-200 px-2 py-1 rounded text-sm shadow-sm z-20">
+                            Elbow: (x=7, y=6)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap Simulation -->
+                <div
+                    class="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm w-full md:w-1/2 relative aspect-square overflow-hidden flex items-center justify-center">
+                    <h3
+                        class="absolute top-4 left-4 z-20 text-slate-900 font-bold bg-white/90 border border-slate-200 px-2 py-1 rounded shadow-sm">
+                        AI Heatmap Output</h3>
+
+                    <!-- Background -->
+                    <div class="absolute inset-0 bg-blue-50/80 rounded-xl"></div>
+
+                    <!-- Grid Overlay -->
+                    <div
+                        class="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:10%_10%] rounded-xl">
+                    </div>
+
+                    <!-- Arm silhouette -->
+                    <svg class="absolute inset-0 w-full h-full text-slate-300 opacity-100" viewBox="0 0 100 100"
+                        fill="currentColor">
+                        <path d="M 20 20 L 70 60 L 90 90 L 70 100 L 50 70 L 10 30 Z" />
+                    </svg>
+
+                    <!-- The Heat (Elbow is at approx 70% left, 60% top from visual) -->
+                    <div
+                        class="absolute left-[70%] top-[60%] -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full hot-spot mix-blend-multiply opacity-70 animate-pulse">
+                    </div>
+
+                    <!-- Secondary weak heat (e.g. wrist) -->
+                    <div
+                        class="absolute left-[90%] top-[90%] -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] rounded-full hot-spot mix-blend-multiply opacity-30">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Real World Examples -->
+        <div id="step-4" class="step-content flex-col gap-8 items-center justify-center min-h-[60vh]">
+            <div class="text-center max-w-3xl mb-4">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Real-World Examples</h2>
+                <p class="text-lg text-slate-600">You have probably used this AI math without even realizing it!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                <!-- Example 1 -->
+                <div
+                    class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:border-cyan-400 hover:shadow-md transition-all group">
+                    <div
+                        class="w-14 h-14 bg-cyan-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-cyan-600">
+                            <path
+                                d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                            <circle cx="12" cy="13" r="3" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Snapchat & TikTok Filters</h3>
+                    <p class="text-sm text-slate-600">When you put puppy ears on your head, the AI finds keypoints for
+                        your eyes, nose, and head so the digital ears stick perfectly, even when you move.</p>
+                </div>
+
+                <!-- Example 2 -->
+                <div
+                    class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:border-purple-400 hover:shadow-md transition-all group">
+                    <div
+                        class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-purple-600">
+                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                            <line x1="9" x2="15" y1="9" y2="9" />
+                            <line x1="9" x2="15" y1="15" y2="15" />
+                            <line x1="9" x2="9" y1="9" y2="15" />
+                            <line x1="15" x2="15" y1="9" y2="15" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Video Games (Just Dance)</h3>
+                    <p class="text-sm text-slate-600">The camera uses pose estimation to track your wrists, knees, and
+                        ankles. It compares your (x,y) keypoints to the screen to see if you did the move right.</p>
+                </div>
+
+                <!-- Example 3 -->
+                <div
+                    class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:border-orange-400 hover:shadow-md transition-all group">
+                    <div
+                        class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-orange-600">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M5.4 5.4 18.6 18.6" />
+                            <path d="M5.4 18.6 18.6 5.4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Sports Training Apps</h3>
+                    <p class="text-sm text-slate-600">Basketball players use apps that find keypoints on their arms to
+                        calculate the exact angle of their elbow, helping them shoot the ball perfectly!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Grown-Up Math -->
+        <div id="step-5" class="step-content flex-col gap-6 items-center justify-center min-h-[60vh]">
+            <div class="text-center max-w-3xl mb-4">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">The "Grown-Up" Math Bonus</h2>
+                <p class="text-lg text-slate-600">
+                    Instead of predicting a single number, the CNN outputs a spatial probability distribution (the
+                    heatmap) for each keypoint.
+                </p>
+            </div>
+
+            <div class="w-full max-w-4xl space-y-6">
+                <!-- Math Block 1 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xl text-cyan-700 font-bold mb-3">1. Spatial Softmax</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        The network applies a mathematical function to the final output layer (raw scores $H$) to turn
+                        them into probabilities $P(x,y)$ that sum to 1.
+                    </p>
+                    <div
+                        class="bg-slate-50 border border-slate-100 p-4 rounded-lg overflow-x-auto text-center text-lg math-container text-slate-800">
+                        $$P(x,y) = \frac{e^{H_{x,y}}}{\sum_{i}\sum_{j} e^{H_{i,j}}}$$
+                    </div>
+                </div>
+
+                <!-- Math Block 2 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xl text-cyan-700 font-bold mb-3">2. Extracting the Point</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        The exact estimated point $(\hat{x}, \hat{y})$ is usually the coordinate with the maximum
+                        probability. We represent this as <strong>argmax</strong>.
+                    </p>
+                    <div
+                        class="bg-slate-50 border border-slate-100 p-4 rounded-lg overflow-x-auto text-center text-lg math-container text-slate-800">
+                        $$(\hat{x}, \hat{y}) = \text{argmax}_{x,y} P(x,y)$$
+                    </div>
+                    <p class="text-sm text-slate-600 mt-4 border-t border-slate-100 pt-4">
+                        <em>Pro Tip:</em> Modern systems calculate an <strong>expected value</strong> over the
+                        distribution to get sub-pixel accuracy!
+                        <br>
+                        <span class="math-container text-center block mt-2 text-slate-800">$$(\hat{x}, \hat{y}) =
+                            \sum_{x}\sum_{y} \begin{pmatrix} x \\ y \end{pmatrix} P(x,y)$$</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 6: Interactive Pose Explorer -->
+        <div id="step-6" class="step-content flex-col items-center justify-center min-h-[60vh] w-full">
+            <div class="text-center max-w-3xl mb-6">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Interactive Pose Explorer</h2>
+                <p class="text-md text-slate-600">
+                    Drag the joints on the stick figure below. Notice how the <span
+                        class="text-cyan-600 font-mono font-bold">(x,y)</span> coordinates change in real-time, exactly
+                    like the data a CNN outputs!
+                </p>
+            </div>
+
+            <div
+                class="flex flex-col lg:flex-row gap-6 w-full max-w-5xl bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <!-- Canvas Area -->
+                <div
+                    class="relative w-full lg:w-2/3 aspect-video md:aspect-[4/3] bg-white rounded-xl border border-slate-300 overflow-hidden cursor-crosshair shadow-sm select-none touch-none">
+                    <!-- Grid background drawn in CSS (Light theme version) -->
+                    <div class="absolute inset-0 opacity-[0.15] pointer-events-none"
+                        style="background-image: linear-gradient(#0284c7 1px, transparent 1px), linear-gradient(90deg, #0284c7 1px, transparent 1px); background-size: 20px 20px;">
+                    </div>
+
+                    <canvas id="pose-canvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
+
+                    <div
+                        class="absolute bottom-2 right-2 text-xs text-slate-400 font-mono pointer-events-none bg-white/70 px-1 rounded">
+                        Origin (0,0) is Top-Left
+                    </div>
+                </div>
+
+                <!-- Data Panel -->
+                <div
+                    class="w-full lg:w-1/3 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-3 bg-slate-50 border-b border-slate-200">
+                        <h3 class="font-bold text-cyan-700 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path
+                                    d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                                <circle cx="12" cy="13" r="3" />
+                            </svg>
+                            Output: <span class="text-slate-800">argmax P(x,y)</span>
+                        </h3>
+                    </div>
+                    <div id="joints-list"
+                        class="flex-grow p-4 overflow-y-auto space-y-2 h-48 lg:h-auto font-mono text-sm">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 7: PyTorch Tutorial -->
+        <div id="step-7" class="step-content flex-col gap-6 items-center justify-center min-h-[60vh] w-full">
+            <div class="text-center max-w-3xl mb-4">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Step 7: Code it Yourself!</h2>
+                <p class="text-lg text-slate-600">
+                    Want to see how this looks in real Python code? Here is a simple PyTorch script using the exact
+                    concepts we just learned!
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 w-full max-w-5xl">
+                <!-- Explanation Side -->
+                <div class="w-full lg:w-1/3 space-y-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-cyan-700 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
+                            1. The Magnifying Glass
+                        </h3>
+                        <p class="text-sm text-slate-600">We create a <code>PoseCNN</code> class. The
+                            <code>nn.Conv2d</code> layers act as our sliding magnifying glasses, looking for patterns to
+                            generate a single heatmap channel.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-cyan-700 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                <line x1="3" x2="21" y1="9" y2="9" />
+                                <line x1="3" x2="21" y1="15" y2="15" />
+                                <line x1="9" x2="9" y1="3" y2="21" />
+                                <line x1="15" x2="15" y1="3" y2="21" />
+                            </svg>
+                            2. The Graph Paper
+                        </h3>
+                        <p class="text-sm text-slate-600">We feed the AI a dummy image (a 32x32 grid). The AI looks at
+                            the graph paper and spits out a <strong>Heatmap</strong> of where it thinks the elbow is.
+                        </p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-cyan-700 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <circle cx="12" cy="11" r="3" />
+                            </svg>
+                            3. The Hottest Point
+                        </h3>
+                        <p class="text-sm text-slate-600">We flatten the heatmap and use <code>torch.argmax()</code>
+                            (just like the math in Step 5!) to find the single hottest pixel. We then convert that back
+                            to (X,Y) coordinates.</p>
+                    </div>
+                </div>
+
+                <!-- Code Side -->
+                <div
+                    class="w-full lg:w-2/3 rounded-xl overflow-hidden shadow-lg border border-slate-300 bg-[#2d2d2d] flex flex-col">
+                    <div class="bg-slate-800 px-4 py-3 flex items-center gap-2 border-b border-slate-700">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="text-slate-400 text-xs font-mono ml-2">pose_estimation.py</span>
+                    </div>
+                    <div class="p-4 overflow-x-auto text-sm flex-grow">
+                        <pre class="!m-0 !p-0 !bg-transparent"><code class="language-python">import torch
+import torch.nn as nn
+
+# 1. The Magnifying Glass (Our CNN)
+class PoseCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Looks at an RGB image, outputs 1 heatmap channel (e.g. for an elbow)
+        self.magnifying_glass = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=16, out_channels=1, kernel_size=3, padding=1)
+        )
+
+    def forward(self, image):
+        # The AI paints the heatmap
+        heatmap = self.magnifying_glass(image)
+        return heatmap
+
+# 2. Play the Game (Setup)
+ai_player = PoseCNN()
+graph_paper_image = torch.rand(1, 3, 32, 32) # A fake 32x32 image
+
+# 3. Make a Guess
+predicted_heatmap = ai_player(graph_paper_image)
+
+# 4. Find the Hottest Point (Point Estimation)
+# Flatten the 32x32 map to find the absolute max heat
+flat_map = predicted_heatmap.view(-1)
+hottest_idx = torch.argmax(flat_map)
+
+# Convert the single index back to (x, y) coordinates
+y = hottest_idx // 32
+x = hottest_idx % 32
+
+print(f"The AI thinks the elbow is at: (X: {x.item()}, Y: {y.item()})")</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-6 mt-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <button id="btn-back"
+                class="px-6 py-2.5 rounded-lg font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                Back
+            </button>
+
+            <button id="btn-next"
+                class="px-6 py-2.5 rounded-lg font-medium bg-cyan-600 hover:bg-cyan-500 text-white transition-colors flex items-center gap-2 shadow-[0_4px_12px_rgba(8,145,178,0.3)] hover:shadow-[0_6px_16px_rgba(8,145,178,0.4)]">
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                </svg>
+            </button>
+        </div>
+    </footer>
+
+    <script src="../js/pose_estimation.js"></script>
+</body>
+
+</html>

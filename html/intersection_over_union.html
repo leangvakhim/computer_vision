@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intersection over Union (IoU) Visualizer</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- KaTeX CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .box-transition {
+            transition: top 0.5s ease-in-out, left 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out, opacity 0.3s, background-color 0.3s;
+        }
+
+        .no-transition {
+            transition: none !important;
+        }
+
+        #visualizer-area {
+            touch-action: none;
+            /* Prevent scrolling when dragging on mobile */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-5xl mx-auto p-4 md:p-8">
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Intersection over Union (IoU)</h1>
+            <p class="text-lg text-slate-600">A visual guide to how AI plays the matching game</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row min-h-[500px]">
+
+            <!-- Left: Text Content -->
+            <div
+                class="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-100">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span id="step-badge"
+                            class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold tracking-wide uppercase">
+                            Step 1
+                        </span>
+                        <span id="step-counter" class="text-sm text-gray-400 font-medium">1 / 9</span>
+                    </div>
+
+                    <h2 id="step-title" class="text-2xl font-bold text-gray-800 mb-4 h-16 md:h-auto">Title Here</h2>
+
+                    <div id="step-description"
+                        class="prose prose-indigo text-gray-600 leading-relaxed text-base md:text-lg">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center mt-8 pt-4 border-t border-gray-100">
+                    <button id="prevBtn"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back
+                    </button>
+
+                    <!-- Progress Dots -->
+                    <div id="progress-dots" class="flex space-x-1.5 hidden md:flex">
+                        <!-- Dots injected via JS -->
+                    </div>
+
+                    <button id="nextBtn"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Next <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Interactive Visualizer -->
+            <div class="w-full md:w-1/2 bg-slate-50 relative flex flex-col">
+                <!-- Info Bar -->
+                <div id="math-bar"
+                    class="absolute top-0 left-0 w-full bg-white/90 backdrop-blur-sm border-b p-3 shadow-sm z-20 flex justify-around text-sm font-semibold opacity-0 transition-opacity">
+                    <div class="text-indigo-600">Overlap: <span id="val-inter">0</span>px²</div>
+                    <div class="text-slate-600">Total: <span id="val-union">0</span>px²</div>
+                    <div class="text-emerald-600 text-base">IoU: <span id="val-iou">0.00</span></div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div id="visualizer-area"
+                    class="flex-grow relative overflow-hidden flex items-center justify-center min-h-[350px]">
+
+                    <!-- Target Subject (The Cat) -->
+                    <div id="subject-icon"
+                        class="absolute text-slate-300 text-9xl z-0 transition-opacity duration-500 hidden">
+                        <i class="fa-solid fa-cat"></i>
+                    </div>
+
+                    <!-- Ground Truth Box (Blue) -->
+                    <div id="gt-box"
+                        class="absolute border-4 border-blue-500 bg-blue-200/30 rounded flex items-end p-1 box-transition z-10 hidden">
+                        <span class="text-blue-700 text-xs font-bold bg-white/80 px-1 rounded shadow-sm">Ground
+                            Truth</span>
+                    </div>
+
+                    <!-- Prediction Box (Red) -->
+                    <div id="pred-box"
+                        class="absolute border-4 border-red-500 bg-red-200/30 rounded flex items-start justify-end p-1 box-transition z-20 hidden cursor-grab active:cursor-grabbing">
+                        <span
+                            class="text-red-700 text-xs font-bold bg-white/80 px-1 rounded shadow-sm relative top-[-24px]">Prediction</span>
+                    </div>
+
+                    <!-- Intersection Highlight (Purple) -->
+                    <div id="inter-box"
+                        class="absolute border-2 border-dashed border-purple-600 bg-purple-400/50 box-transition z-30 hidden pointer-events-none flex items-center justify-center">
+                        <span id="inter-label"
+                            class="text-purple-900 text-xs font-bold drop-shadow-md hidden">Intersection</span>
+                    </div>
+
+                    <!-- Dynamic Extra Elements Container (for Training/Testing/NMS steps) -->
+                    <div id="extra-elements" class="absolute inset-0 pointer-events-none z-15"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure for Steps
+        const steps = [
+            {
+                title: "Introduction: The Matching Game",
+                badge: "Intro",
+                content: `
+                    <p>"Intersection over Union" (or IoU for short) sounds like a big, complicated math term, but it is actually just a simple way for a computer to play a matching game.</p>
+                    <p class="mt-4">Imagine you are looking at a picture book, and your parent asks you to take a square sticker and put it exactly over a picture of a cat.</p>
+                    <p class="mt-4">Let's see how the computer thinks about that matching game!</p>
+                `,
+                setup: (scene) => {
+                    scene.hideMath();
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, false);
+                    scene.setPred(280, 50, 100, 100, false); // Like holding a sticker away
+                    scene.hideInter();
+                }
+            },
+            {
+                title: "The Setup: Boxes",
+                badge: "The Setup",
+                content: `
+                    <p>Here is how the computer sets up the game using boxes:</p>
+                    <ul class="mt-4 space-y-3">
+                        <li><strong class="text-blue-600">The Ground Truth (Blue Box):</strong> This is where the cat actually is. It is the perfect spot for the sticker.</li>
+                        <li><strong class="text-red-600">The Prediction (Red Box):</strong> This is where you (or the computer) guessed the cat is and placed the sticker.</li>
+                    </ul>
+                `,
+                setup: (scene) => {
+                    scene.hideMath();
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, true);
+                    scene.setPred(280, 50, 100, 100, true);
+                    scene.hideInter();
+                }
+            },
+            {
+                title: "The Overlap",
+                badge: "The Math",
+                content: `
+                    <p>To figure out how good your guess was, the computer looks at two things. The first is:</p>
+                    <p class="mt-4"><strong class="text-purple-600">The Intersection (The Overlap):</strong> Look at where your sticker and the cat picture are overlapping. If you did a good job, the sticker covers most of the cat!</p>
+                    <div class="mt-4 p-3 bg-gray-100 rounded-lg text-center font-semibold">
+                        $$ Area_{Intersection} $$
+                    </div>
+                    <p class="mt-4 text-sm">"Intersection" is just a fancy word for the part where both boxes are sitting right on top of each other.</p>
+                `,
+                setup: (scene) => {
+                    scene.hideMath();
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, true);
+                    scene.setPred(150, 130, 150, 150, true); // Overlapping
+                    setTimeout(() => scene.showInter(true), 500); // Show overlap after move
+                }
+            },
+            {
+                title: "The Whole Thing",
+                badge: "The Math",
+                content: `
+                    <p>The second thing the computer looks at is the total space.</p>
+                    <p class="mt-4"><strong>The Union (The Whole Thing):</strong> Now, look at the total space taken up by both the cat picture and your sticker combined.</p>
+                    <div class="mt-4 p-3 bg-gray-100 rounded-lg text-center font-semibold text-sm">
+                        $$ Area_{Union} = Area_{Blue} + Area_{Red} - Area_{Intersection} $$
+                    </div>
+                `,
+                setup: (scene) => {
+                    scene.hideMath();
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, true);
+                    scene.setPred(150, 130, 150, 150, true);
+                    scene.showInter(false); // Hide specific intersection highlight
+                    scene.addUnionHighlight(100, 100, 150, 150, 150, 130, 150, 150); // Custom func
+                }
+            },
+            {
+                title: "The IoU Formula",
+                badge: "The Math",
+                content: `
+                    <p>The math to get your score is just division. The computer takes the size of the Overlap and divides it by the size of the Whole Thing.</p>
+                    <div class="mt-4 p-4 bg-indigo-50 rounded-lg text-center font-bold text-lg border border-indigo-100">
+                        $$ IoU = \\frac{Area_{Intersection}}{Area_{Union}} $$
+                    </div>
+                    <p class="mt-4">A perfect score is <strong class="text-emerald-600">1.0</strong>. Missing completely is <strong class="text-red-600">0</strong>.</p>
+                `,
+                setup: (scene) => {
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, true);
+                    scene.setPred(150, 130, 150, 150, true);
+                    scene.showInter(false);
+                    scene.updateMathBar(true); // Enable math tracking but static
+                }
+            },
+            {
+                title: "Interactive: Try it Yourself!",
+                badge: "Play",
+                content: `
+                    <p>Grab the <strong>Prediction box (Red)</strong> on the right and drag it over the <strong>Ground Truth box (Blue)</strong> to see how your score changes!</p>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li>🎯 <strong>Score of 1.0:</strong> Perfect! The overlap is the exact same size as the boxes.</li>
+                        <li>❌ <strong>Score of 0:</strong> Missed entirely. No overlap.</li>
+                        <li>👍 <strong>Score of 0.5+:</strong> Half-on and half-off. Usually a "good" guess!</li>
+                    </ul>
+                `,
+                setup: (scene) => {
+                    scene.clearExtras();
+                    scene.showSubject(true);
+                    scene.setGT(100, 100, 150, 150, true);
+                    scene.setPred(280, 200, 150, 150, true);
+                    scene.showInter(false);
+                    scene.updateMathBar(true);
+                    scene.enableDrag(true); // Turn on interactivity!
+                }
+            },
+            {
+                title: "1. Training (Practicing)",
+                badge: "How AI Uses It",
+                content: `
+                    <p>The computer uses the IoU score as a "ruler" in 3 different ways. First is <strong>Training</strong>.</p>
+                    <p class="mt-3">When the computer is first learning, it guesses randomly.</p>
+                    <p class="mt-3">Every time it makes a guess, it uses the IoU ruler. If the score is low (like 0.1), the computer says, <em>"Oops, I missed! Let me adjust my aim and try again."</em></p>
+                    <p class="mt-3">IoU acts like a coach, helping it learn from mistakes.</p>
+                `,
+                setup: (scene) => {
+                    scene.enableDrag(false);
+                    scene.showSubject(true);
+                    scene.updateMathBar(true);
+                    scene.clearExtras();
+
+                    // Animation Sequence for training
+                    scene.setGT(120, 100, 150, 150, true);
+
+                    // Epoch 1
+                    scene.setPred(300, 10, 120, 120, true);
+
+                    setTimeout(() => {
+                        // Epoch 2
+                        if (currentStep === 6) scene.setPred(200, 50, 140, 140, true);
+                    }, 1500);
+
+                    setTimeout(() => {
+                        // Epoch 3
+                        if (currentStep === 6) scene.setPred(130, 90, 150, 150, true);
+                    }, 3000);
+                }
+            },
+            {
+                title: "2. Testing (Report Card)",
+                badge: "How AI Uses It",
+                content: `
+                    <p>After practicing millions of times, scientists need to know if the AI is smart enough to be used in the real world.</p>
+                    <p class="mt-4">They give it a test on new pictures.</p>
+                    <p class="mt-4">If the computer gets high IoU scores (like <strong>0.8</strong> or <strong>0.9</strong>) on most pictures, it gets an "A+" on its report card and passes the test!</p>
+                `,
+                setup: (scene) => {
+                    scene.enableDrag(false);
+                    scene.hideMath();
+                    scene.showSubject(false);
+                    scene.setGT(0, 0, 0, 0, false); // hide main boxes
+                    scene.setPred(0, 0, 0, 0, false);
+                    scene.hideInter();
+
+                    // Draw mini report card examples
+                    scene.drawTestingExamples();
+                }
+            },
+            {
+                title: "3. Predicting (Cleaning up)",
+                badge: "How AI Uses It",
+                content: `
+                    <p>In the real world, the computer gets overly excited. It might guess three times and put three stickers on the exact same cat!</p>
+                    <p class="mt-4">The computer uses IoU to clean up its mess. It sees the stickers overlap heavily (high IoU with each other) and says: <em>"They must point to the same cat!"</em></p>
+                    <p class="mt-4">It keeps the best one and throws away the rest. This is called <strong>Non-Maximum Suppression (NMS)</strong>.</p>
+                `,
+                setup: (scene) => {
+                    scene.enableDrag(false);
+                    scene.hideMath();
+                    scene.showSubject(true);
+                    scene.setGT(120, 100, 150, 150, false); // hide GT, show only preds
+                    scene.setPred(0, 0, 0, 0, false);
+                    scene.clearExtras();
+
+                    scene.drawNMSAnimation();
+                }
+            }
+        ];
+
+        // --- App State ---
+        let currentStep = 0;
+        let isDragging = false;
+
+        // DOM Elements
+        const elTitle = document.getElementById('step-title');
+        const elDesc = document.getElementById('step-description');
+        const elBadge = document.getElementById('step-badge');
+        const elCounter = document.getElementById('step-counter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressDots = document.getElementById('progress-dots');
+
+        // Visualizer Elements
+        const area = document.getElementById('visualizer-area');
+        const gtBox = document.getElementById('gt-box');
+        const predBox = document.getElementById('pred-box');
+        const interBox = document.getElementById('inter-box');
+        const interLabel = document.getElementById('inter-label');
+        const mathBar = document.getElementById('math-bar');
+        const valInter = document.getElementById('val-inter');
+        const valUnion = document.getElementById('val-union');
+        const valIou = document.getElementById('val-iou');
+        const subjectIcon = document.getElementById('subject-icon');
+        const extraElements = document.getElementById('extra-elements');
+
+        // Math Data
+        let box1 = { x: 0, y: 0, w: 0, h: 0 };
+        let box2 = { x: 0, y: 0, w: 0, h: 0 };
+
+        // --- Visualizer Controller ---
+        const Scene = {
+            setGT: (x, y, w, h, visible) => {
+                box1 = { x, y, w, h };
+                gtBox.style.left = `${x}px`;
+                gtBox.style.top = `${y}px`;
+                gtBox.style.width = `${w}px`;
+                gtBox.style.height = `${h}px`;
+                visible ? gtBox.classList.remove('hidden') : gtBox.classList.add('hidden');
+                Scene.recalcMath();
+            },
+            setPred: (x, y, w, h, visible) => {
+                box2 = { x, y, w, h };
+                predBox.style.left = `${x}px`;
+                predBox.style.top = `${y}px`;
+                predBox.style.width = `${w}px`;
+                predBox.style.height = `${h}px`;
+                visible ? predBox.classList.remove('hidden') : predBox.classList.add('hidden');
+                Scene.recalcMath();
+            },
+            showInter: (showLabel) => {
+                const math = Scene.recalcMath();
+                if (math.interArea > 0) {
+                    interBox.classList.remove('hidden');
+                    interBox.style.left = `${math.inter.x}px`;
+                    interBox.style.top = `${math.inter.y}px`;
+                    interBox.style.width = `${math.inter.w}px`;
+                    interBox.style.height = `${math.inter.h}px`;
+                    showLabel ? interLabel.classList.remove('hidden') : interLabel.classList.add('hidden');
+                } else {
+                    interBox.classList.add('hidden');
+                }
+            },
+            hideInter: () => {
+                interBox.classList.add('hidden');
+            },
+            showSubject: (visible) => {
+                visible ? subjectIcon.classList.remove('hidden') : subjectIcon.classList.add('hidden');
+            },
+            updateMathBar: (visible) => {
+                if (visible) {
+                    mathBar.classList.remove('opacity-0', 'pointer-events-none');
+                    mathBar.classList.add('opacity-100');
+                    Scene.recalcMath();
+                } else {
+                    mathBar.classList.remove('opacity-100');
+                    mathBar.classList.add('opacity-0', 'pointer-events-none');
+                }
+            },
+            hideMath: () => Scene.updateMathBar(false),
+            recalcMath: () => {
+                const xA = Math.max(box1.x, box2.x);
+                const yA = Math.max(box1.y, box2.y);
+                const xB = Math.min(box1.x + box1.w, box2.x + box2.w);
+                const yB = Math.min(box1.y + box1.h, box2.y + box2.h);
+
+                const interW = Math.max(0, xB - xA);
+                const interH = Math.max(0, yB - yA);
+                const interArea = interW * interH;
+
+                const box1Area = box1.w * box1.h;
+                const box2Area = box2.w * box2.h;
+                const unionArea = box1Area + box2Area - interArea;
+
+                let iou = 0;
+                if (unionArea > 0) {
+                    iou = interArea / unionArea;
+                }
+
+                // Update UI Texts
+                valInter.innerText = interArea.toFixed(0);
+                valUnion.innerText = unionArea.toFixed(0);
+                valIou.innerText = iou.toFixed(3);
+
+                // Color code IoU text
+                if (iou > 0.8) valIou.className = 'text-emerald-600 font-bold';
+                else if (iou > 0.4) valIou.className = 'text-yellow-600 font-bold';
+                else valIou.className = 'text-red-600 font-bold';
+
+                // Automatically update intersection box if it's currently visible
+                if (!interBox.classList.contains('hidden') && interArea > 0) {
+                    interBox.style.left = `${xA}px`;
+                    interBox.style.top = `${yA}px`;
+                    interBox.style.width = `${interW}px`;
+                    interBox.style.height = `${interH}px`;
+                } else if (interArea === 0) {
+                    interBox.classList.add('hidden');
+                }
+
+                return { iou, interArea, unionArea, inter: { x: xA, y: yA, w: interW, h: interH } };
+            },
+            enableDrag: (enable) => {
+                if (enable) {
+                    predBox.classList.add('cursor-grab');
+                    // We attach events in initDrag, just toggle visual cue here if needed
+                } else {
+                    predBox.classList.remove('cursor-grab', 'active:cursor-grabbing');
+                }
+            },
+            clearExtras: () => {
+                extraElements.innerHTML = '';
+            },
+            addUnionHighlight: (x1, y1, w1, h1, x2, y2, w2, h2) => {
+                // To visualize Union visually, we can draw two light green boxes
+                extraElements.innerHTML = `
+                    <div class="absolute bg-emerald-300/40 border-2 border-emerald-500 rounded" style="left:${x1}px; top:${y1}px; width:${w1}px; height:${h1}px;"></div>
+                    <div class="absolute bg-emerald-300/40 border-2 border-emerald-500 rounded" style="left:${x2}px; top:${y2}px; width:${w2}px; height:${h2}px;"></div>
+                `;
+            },
+            drawTestingExamples: () => {
+                const examples = [
+                    { x: 30, y: 120, title: "Bad", iou: "0.10", color: "red", po: { x: 20, y: 150 } },
+                    { x: 160, y: 120, title: "Good", iou: "0.65", color: "yellow", po: { x: 180, y: 140 } },
+                    { x: 290, y: 120, title: "Perfect", iou: "0.98", color: "emerald", po: { x: 292, y: 122 } }
+                ];
+
+                let html = '';
+                examples.forEach(ex => {
+                    html += `
+                        <div class="absolute text-center" style="left: ${ex.x}px; top: 70px; width: 80px;">
+                            <span class="font-bold text-${ex.color}-600 text-sm">IoU: ${ex.iou}</span>
+                        </div>
+                        <div class="absolute border-4 border-blue-500 bg-blue-200/30 rounded" style="left: ${ex.x}px; top: ${ex.y}px; width: 80px; height: 80px;"></div>
+                        <div class="absolute border-4 border-${ex.color}-500 bg-${ex.color}-200/30 rounded" style="left: ${ex.po.x}px; top: ${ex.po.y}px; width: 80px; height: 80px;"></div>
+                    `;
+                });
+                extraElements.innerHTML = html;
+            },
+            drawNMSAnimation: () => {
+                // Base Cat
+                const html = `
+                    <div class="absolute text-slate-300 text-7xl z-0" style="left: 150px; top: 120px;">
+                        <i class="fa-solid fa-cat"></i>
+                    </div>
+                    <!-- Box 1 (Best) -->
+                    <div id="nms-1" class="absolute border-4 border-red-500 bg-red-200/30 rounded box-transition z-20" style="left: 140px; top: 110px; width: 100px; height: 100px;">
+                        <span class="text-red-700 text-[10px] font-bold bg-white/90 px-1 relative top-[-20px] shadow-sm rounded">Conf: 99%</span>
+                    </div>
+                    <!-- Box 2 (Duplicate) -->
+                    <div id="nms-2" class="absolute border-2 border-orange-500 bg-orange-200/20 rounded box-transition z-10" style="left: 130px; top: 120px; width: 105px; height: 95px;">
+                        <span class="text-orange-700 text-[10px] font-bold bg-white/90 px-1 relative top-[10px] left-[50px] shadow-sm rounded">Conf: 85%</span>
+                    </div>
+                    <!-- Box 3 (Duplicate) -->
+                    <div id="nms-3" class="absolute border-2 border-yellow-500 bg-yellow-200/20 rounded box-transition z-10" style="left: 150px; top: 105px; width: 90px; height: 110px;">
+                        <span class="text-yellow-700 text-[10px] font-bold bg-white/90 px-1 relative top-[80px] shadow-sm rounded">Conf: 70%</span>
+                    </div>
+                `;
+                extraElements.innerHTML = html;
+
+                setTimeout(() => {
+                    if (currentStep !== 8) return;
+                    const b2 = document.getElementById('nms-2');
+                    const b3 = document.getElementById('nms-3');
+                    if (b2) { b2.style.opacity = '0'; b2.style.transform = 'scale(1.1)'; }
+                    if (b3) { b3.style.opacity = '0'; b3.style.transform = 'scale(1.1)'; }
+                }, 2000);
+            }
+        };
+
+        // --- Drag and Drop Logic ---
+        let dragStartX, dragStartY;
+        let initialBoxX, initialBoxY;
+
+        const onDragStart = (e) => {
+            if (currentStep !== 5) return; // Only allow drag on step 5
+            isDragging = true;
+            predBox.classList.remove('box-transition'); // disable CSS transition during drag
+            predBox.classList.add('no-transition');
+            interBox.classList.remove('box-transition');
+            interBox.classList.add('no-transition');
+
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            dragStartX = clientX;
+            dragStartY = clientY;
+            initialBoxX = box2.x;
+            initialBoxY = box2.y;
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+        };
+
+        const onDragMove = (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // prevent scroll on touch
+
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            const dx = clientX - dragStartX;
+            const dy = clientY - dragStartY;
+
+            // Calculate new position, keep within visualizer bounds
+            const parentRect = area.getBoundingClientRect();
+            let newX = initialBoxX + dx;
+            let newY = initialBoxY + dy;
+
+            // Optional: Bound checking
+            // newX = Math.max(0, Math.min(newX, parentRect.width - box2.w));
+            // newY = Math.max(0, Math.min(newY, parentRect.height - box2.h));
+
+            Scene.setPred(newX, newY, box2.w, box2.h, true);
+            Scene.showInter(false);
+        };
+
+        const onDragEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            predBox.classList.add('box-transition');
+            predBox.classList.remove('no-transition');
+            interBox.classList.add('box-transition');
+            interBox.classList.remove('no-transition');
+
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+        };
+
+        predBox.addEventListener('mousedown', onDragStart);
+        predBox.addEventListener('touchstart', onDragStart, { passive: false });
+
+        // --- Core Application Logic ---
+
+        function updateUI() {
+            const stepData = steps[currentStep];
+
+            // Update Text Data
+            elTitle.innerText = stepData.title;
+            elDesc.innerHTML = stepData.content;
+            elBadge.innerText = stepData.badge;
+            elCounter.innerText = `${currentStep + 1} / ${steps.length}`;
+
+            // Render Math Equations
+            renderMathInElement(elDesc, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+
+            // Update Progress Dots
+            progressDots.innerHTML = steps.map((_, idx) => `
+                <div class="w-2.5 h-2.5 rounded-full transition-colors duration-300 ${idx === currentStep ? 'bg-indigo-600 scale-125' : 'bg-gray-300'}"></div>
+            `).join('');
+
+            // Update Buttons
+            prevBtn.disabled = currentStep === 0;
+            if (currentStep === steps.length - 1) {
+                nextBtn.innerHTML = `Finish <i class="fa-solid fa-check ml-2"></i>`;
+                nextBtn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+                nextBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-emerald-700');
+            } else {
+                nextBtn.innerHTML = `Next <i class="fa-solid fa-arrow-right ml-2"></i>`;
+                nextBtn.classList.replace('bg-emerald-600', 'bg-indigo-600');
+                nextBtn.classList.replace('hover:bg-emerald-700', 'hover:bg-indigo-700');
+            }
+
+            // Trigger Scene Setup
+            stepData.setup(Scene);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait slightly for fonts/icons to load before positioning
+            setTimeout(updateUI, 100);
+        });
+
+    </script>
+</body>
+
+</html>
