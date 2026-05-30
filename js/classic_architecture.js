@@ -24,6 +24,7 @@ const steps = [
             </div>
         `,
         renderMath: false
+        // No actionUrl for Step 1
     },
     {
         title: "2. LeNet-5 (1998)",
@@ -42,7 +43,8 @@ const steps = [
             </div>
             <div class="absolute bottom-4 text-slate-400 text-sm font-medium">Key trait: Average Pooling and Tanh Activations</div>
         `,
-        renderMath: false
+        renderMath: false,
+        actionUrl: "./lenet_5.html" // Target for Step 2
     },
     {
         title: "3. AlexNet (2012)",
@@ -61,7 +63,8 @@ const steps = [
             </div>
             <div class="absolute bottom-0 text-slate-400 text-sm font-medium">Key trait: ReLU Activation & Dropout for Regularization</div>
         `,
-        renderMath: false
+        renderMath: false,
+        actionUrl: "./alexnet.html" // Target for Step 3
     },
     {
         title: "4. VGG-16 (2014)",
@@ -97,7 +100,8 @@ const steps = [
             </div>
             <div class="absolute top-4 right-4 text-slate-400 text-sm font-medium">Uniform 3x3 Convolutions</div>
         `,
-        renderMath: false
+        renderMath: false,
+        actionUrl: "./vgg_16.html" // Target for Step 4
     },
     {
         title: "5. ResNet (2015)",
@@ -127,7 +131,8 @@ const steps = [
                 <div class="text-slate-500 mt-2 font-medium text-center">Output<br><span class="text-sm text-indigo-500">F(x) + x</span></div>
             </div>
         `,
-        renderMath: false
+        renderMath: false,
+        actionUrl: "./resnet.html" // Target for Step 5
     },
     {
         title: "6. The Mathematical Core",
@@ -159,6 +164,7 @@ const steps = [
             </div>
         `,
         renderMath: true
+        // No actionUrl for Step 6
     },
     {
         title: "7. Building with PyTorch",
@@ -202,6 +208,7 @@ const steps = [
             </div>
         `,
         renderMath: false
+        // No actionUrl for Step 7
     }
 ];
 
@@ -211,6 +218,7 @@ let currentStep = 0;
 const titleEl = document.getElementById('step-title');
 const descEl = document.getElementById('step-desc');
 const visualEl = document.getElementById('step-visual');
+const actionEl = document.getElementById('step-action');
 const containerEl = document.getElementById('step-container');
 const btnNext = document.getElementById('btn-next');
 const btnBack = document.getElementById('btn-back');
@@ -265,6 +273,23 @@ function updateUI() {
     titleEl.innerHTML = stepData.title;
     descEl.innerHTML = stepData.desc;
     visualEl.innerHTML = stepData.visual;
+
+    // Handle the Dynamic Action Button (Steps 2 to 5)
+    if (stepData.actionUrl) {
+        actionEl.innerHTML = `
+            <button onclick="window.open('${stepData.actionUrl}', '_blank')"
+                    class="px-5 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors font-medium text-sm inline-flex items-center shadow-sm">
+                Open Detailed View
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+            </button>
+        `;
+        actionEl.style.display = 'block';
+    } else {
+        actionEl.innerHTML = '';
+        actionEl.style.display = 'none';
+    }
 
     // Render Math if required for the current step
     if (stepData.renderMath) {
